@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inventaire des Panneaux</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+    form, table {
+      margin-bottom: 2rem;
+      width: 100%;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    input, select {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+    .delete-btn {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 5px 8px;
+      cursor: pointer;
+    }
+    .delete-btn:hover {
+      background-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Inventaire des Panneaux</h1>
+
+  <form id="inventaireForm">
+    <div>
+      <label>Secteur <input type="text" id="secteur" required></label>
+      <label>N°RD <input type="text" id="nrd" required></label>
+      <label>Classe <input type="text" id="classe" required></label>
+      <label>PR <input type="text" id="pr" required></label>
+      <label>Abscisse PR <input type="text" id="abscisse" required></label>
+      <label>Côté <input type="text" id="cote" required></label>
+      <label>Type panneau <input type="text" id="typePanneau" required></label>
+      <label>Année de fabrication <input type="text" id="annee" required></label>
+      <label>Information panneau <input type="text" id="info" required></label>
+      <label>Carrefour <input type="text" id="carrefour" required></label>
+      <label>Dimensions <input type="text" id="dimensions" required></label>
+      <label>Classe de panneau <input type="text" id="classePanneau" required></label>
+    </div>
+    <button type="submit">Ajouter</button>
+  </form>
+
+  <button onclick="exportToCSV()">📤 Exporter CSV</button>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Secteur</th><th>N°RD</th><th>Classe</th><th>PR</th><th>Abscisse PR</th><th>Côté</th>
+        <th>Type</th><th>Année</th><th>Info</th><th>Carrefour</th><th>Dimensions</th><th>Classe Panneau</th>
+        <th>Supprimer</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const form = document.getElementById('inventaireForm');
+    const tableBody = document.querySelector('#dataTable tbody');
+
+    const champs = [
+      'secteur', 'nrd', 'classe', 'pr', 'abscisse', 'cote',
+      'typePanneau', 'annee', 'info', 'carrefour', 'dimensions', 'classePanneau'
+    ];
+
+    // Charger les données au démarrage
+    window.onload = () => {
+      const saved = JSON.parse(localStorage.getItem('inventaireData') || '[]');
+      saved.forEach(d => addRow(d));
+    };
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const values = champs.map(id => document.getElementById(id).value.trim());
+      addRow(values);
+      saveData();
+      form.reset();
+    });
+
+    function addRow(values) {
+      const row = document.createElement('tr');
+      values.forEach(val => {
+        const td = document.createElement('td');
+        td.textContent = val;
+        row.appendChild(td);
+      });
+
+      const deleteTd = document.createElement('td');
+      const btn = document.createElement('button');
+      btn.textContent = '🗑️';
+      btn.className = 'delete-btn';
+      btn.onclick = () => {
+        row.remove();
+        saveData();
+      };
+      deleteTd.appendChild(btn);
+      row.appendChild(deleteTd);
+
+      tableBody.appendChild(row);
+    }
+
+    function saveData() {
+      const data = [];
+      const rows = tableBody.querySelectorAll('tr');
+      rows.forEach(row => {
+        const vals = Array.from(row.querySelectorAll('td')).slice(0, champs.length).map(td => td.textContent);
+        data.push(vals);
+      });
+      localStorage.setItem('inventaireData', JSON.stringify(data));
+    }
+
+    function exportToCSV() {
+      const rows = document.querySelectorAll('table tr');
+      let csv = '';
+      rows.forEach(row => {
+        const cols = row.querySelectorAll('td, th');
+        const line = Array.from(cols).map(col => `"${col.textContent}"`).join(',');
+        csv += line + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'inventaire.csv';
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
